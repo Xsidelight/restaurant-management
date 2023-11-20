@@ -5,6 +5,7 @@ import (
 
 	"github.com/Xsidelight/restaurant-management/database"
 	"github.com/Xsidelight/restaurant-management/middleware"
+	"github.com/Xsidelight/restaurant-management/routes"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -19,7 +20,7 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Logger())
-	router.UserRoutes(router)
+	routes.UserRoutes(router)
 	router.Use(middleware.Authentication())
 
 	routes.FoodRoutes(router)
