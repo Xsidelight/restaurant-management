@@ -21,8 +21,8 @@ var orderCollection *mongo.Collection = database.OpenCollection(database.Client,
 func GetOrders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		result, err := orderCollection.Find(context.TODO(), bson.M{})
 		defer cancel()
+		result, err := orderCollection.Find(context.TODO(), bson.M{})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while listing order items"})
 		}
@@ -37,11 +37,11 @@ func GetOrders() gin.HandlerFunc {
 func GetOrder() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 		orderId := c.Param("order_id")
 		var order models.Order
 
 		err := foodCollection.FindOne(ctx, bson.M{"order_id": orderId}).Decode(&order)
-		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while fetching the orders"})
 		}
@@ -52,6 +52,8 @@ func GetOrder() gin.HandlerFunc {
 func CreateOrder() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
 		var table models.Table
 		var order models.Order
 
@@ -69,7 +71,6 @@ func CreateOrder() gin.HandlerFunc {
 
 		if order.Table_id != nil {
 			err := menuCollection.FindOne(ctx, bson.M{"tabled_id": table.Table_id}).Decode(&table)
-			defer cancel()
 			if err != nil {
 				msg := fmt.Sprintf("message:Menu was not found")
 				c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
@@ -89,7 +90,7 @@ func CreateOrder() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return
 		}
-		defer cancel()
+
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -97,6 +98,8 @@ func CreateOrder() gin.HandlerFunc {
 func UpdateOrder() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
 		var table models.Table
 		var order models.Order
 
@@ -110,7 +113,6 @@ func UpdateOrder() gin.HandlerFunc {
 
 		if order.Table_id != nil {
 			err := menuCollection.FindOne(ctx, bson.M{"tabled_id": table.Table_id}).Decode(&table)
-			defer cancel()
 			if err != nil {
 				msg := fmt.Sprintf("message:Menu was not found")
 				c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
@@ -144,8 +146,6 @@ func UpdateOrder() gin.HandlerFunc {
 			return
 		}
 
-		defer cancel()
-
 		c.JSON(http.StatusOK, result)
 
 	}
@@ -153,13 +153,14 @@ func UpdateOrder() gin.HandlerFunc {
 
 func OrderItemOrderCreator(order models.Order) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
 	order.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 	order.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 	order.ID = primitive.NewObjectID()
 	order.Order_id = order.ID.Hex()
 
 	orderCollection.InsertOne(ctx, order)
-	defer cancel()
 
 	return order.Order_id
 }

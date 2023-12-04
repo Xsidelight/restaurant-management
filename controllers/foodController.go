@@ -25,6 +25,7 @@ var validate = validator.New()
 func GetFoods() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 
 		recordPerPage, err := strconv.Atoi(c.Query("recordPerPage"))
 
@@ -52,7 +53,6 @@ func GetFoods() gin.HandlerFunc {
 			matchStage, groupStage, projectStage,
 		})
 
-		defer cancel()
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while listing food items"})
@@ -73,12 +73,12 @@ func GetFoods() gin.HandlerFunc {
 func GetFood() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 
 		foodId := c.Param("food_id")
 		var food models.Food
 
 		err := foodCollection.FindOne(ctx, bson.M{"food_id": foodId}).Decode(&food)
-		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while fetching the food item"})
 		}
@@ -92,6 +92,7 @@ func GetFood() gin.HandlerFunc {
 func CreateFood() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 		var menu models.Menu
 		var food models.Food
 
@@ -124,7 +125,6 @@ func CreateFood() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return
 		}
-		defer cancel()
 		c.JSON(http.StatusOK, result)
 
 	}

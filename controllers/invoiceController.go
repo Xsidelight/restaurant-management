@@ -29,13 +29,13 @@ type InvoiceViewFormat struct {
 
 var invoiceCollection *mongo.Collection = database.OpenCollection(database.Client, "invoice")
 
-func GetInvoices(orderCollection *mongo.Collection) gin.HandlerFunc {
+func GetInvoices() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
 		result, err := orderCollection.Find(context.TODO(), bson.M{})
-		defer cancel()
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while listing invoice items"})
 			return
@@ -53,11 +53,11 @@ func GetInvoices(orderCollection *mongo.Collection) gin.HandlerFunc {
 func GetInvoice() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 		invoiceId := c.Param("invoice_id")
 
 		var invoice models.Invoice
 		err := invoiceCollection.FindOne(ctx, bson.M{"invoice_id": invoiceId}).Decode(&invoice)
-		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while fetching the invoice"})
 			return
@@ -88,6 +88,7 @@ func GetInvoice() gin.HandlerFunc {
 func CreateInvoice() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 
 		var invoice models.Invoice
 		if err := c.BindJSON(&invoice); err != nil {
@@ -98,7 +99,6 @@ func CreateInvoice() gin.HandlerFunc {
 		var order models.Order
 
 		err := orderCollection.FindOne(ctx, bson.M{"order_id": invoice.Order_id}).Decode(&order)
-		defer cancel()
 
 		if err != nil {
 			msg := fmt.Sprintf("message: Order was not found")
@@ -130,7 +130,6 @@ func CreateInvoice() gin.HandlerFunc {
 			return
 		}
 
-		defer cancel()
 		c.JSON(http.StatusOK, result)
 
 	}
@@ -140,6 +139,7 @@ func CreateInvoice() gin.HandlerFunc {
 func UpdateInvoice() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 
 		var invoice models.Invoice
 		invoiceId := c.Param("invoice_id")
@@ -188,8 +188,6 @@ func UpdateInvoice() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return
 		}
-
-		defer cancel()
 
 		c.JSON(http.StatusOK, result)
 

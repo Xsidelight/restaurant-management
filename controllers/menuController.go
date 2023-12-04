@@ -20,8 +20,8 @@ var menuCollection *mongo.Collection = database.OpenCollection(database.Client, 
 func GetMenus() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		result, err := menuCollection.Find(context.TODO(), bson.M{})
 		defer cancel()
+		result, err := menuCollection.Find(context.TODO(), bson.M{})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while fetching all menus"})
 			return
@@ -39,12 +39,12 @@ func GetMenus() gin.HandlerFunc {
 func GetMenu() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 
 		menuId := c.Param("menu_id")
 		var menu models.Menu
 
 		err := menuCollection.FindOne(ctx, bson.M{"menu_id": menuId}).Decode(&menu)
-		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while fetching the menu item"})
 		}
@@ -59,6 +59,7 @@ func CreateMenu() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var menu models.Menu
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 
 		if err := c.BindJSON(&menu); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -81,10 +82,8 @@ func CreateMenu() gin.HandlerFunc {
 			msg := fmt.Sprintf("menu item was not created")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 		}
-		defer cancel()
 
 		c.JSON(http.StatusOK, result)
-		defer cancel()
 
 	}
 
@@ -97,6 +96,8 @@ func inTimeSpan(start, end, check time.Time) bool {
 func UpdateMenu() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
 		var menu models.Menu
 
 		if err := c.BindJSON(&menu); err != nil {
@@ -112,7 +113,6 @@ func UpdateMenu() gin.HandlerFunc {
 			if !inTimeSpan(*menu.Start_Date, *menu.End_Date, time.Now()) {
 				msg := "kindly retype the time"
 				c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
-				defer cancel()
 				return
 			}
 
@@ -150,7 +150,6 @@ func UpdateMenu() gin.HandlerFunc {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			}
 
-			defer cancel()
 			c.JSON(http.StatusOK, result)
 
 		}
