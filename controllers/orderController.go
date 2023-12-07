@@ -82,7 +82,7 @@ func CreateOrder() gin.HandlerFunc {
 		order.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 
 		order.ID = primitive.NewObjectID()
-		order.Order_id = order.Order_id
+		order.Order_id = order.ID.Hex()
 
 		result, insertError := orderCollection.InsertOne(ctx, order)
 		if insertError != nil {
