@@ -63,13 +63,13 @@ func GetUsers() gin.HandlerFunc {
 func GetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
 		userId := c.Param("user_id")
 
 		var user models.User
 
 		err := userCollection.FindOne(ctx, bson.M{"user_id": userId}).Decode(&user)
 
-		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while listing user items"})
 		}
@@ -96,8 +96,8 @@ func SignUp() gin.HandlerFunc {
 
 		count, err := userCollection.CountDocuments(ctx, bson.M{"email": user.Email})
 		if err != nil {
-			log.Panic(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while checking for existing user"})
+			log.Printf("Error occurred while checking for existing user: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -106,8 +106,8 @@ func SignUp() gin.HandlerFunc {
 
 		count, err = userCollection.CountDocuments(ctx, bson.M{"phone": user.Phone})
 		if err != nil {
-			log.Panic(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while checking for existing user"})
+			log.Panic(err)
 			return
 		}
 

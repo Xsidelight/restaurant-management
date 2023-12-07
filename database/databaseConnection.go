@@ -11,7 +11,7 @@ import (
 
 func DBinstance() *mongo.Client {
 	MongoDb := "mongodb://127.0.0.1:27017"
-	fmt.Print(MongoDb)
+	fmt.Println(MongoDb)
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(MongoDb).SetServerAPIOptions(serverAPI)
@@ -22,7 +22,7 @@ func DBinstance() *mongo.Client {
 		log.Fatal(err)
 	}
 
-	fmt.Println("connected to mongodb")
+	fmt.Println("*************Connected to mongodb")
 
 	defer func() {
 		if err = client.Disconnect(context.TODO()); err != nil {
