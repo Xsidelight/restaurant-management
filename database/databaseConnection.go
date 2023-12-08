@@ -22,14 +22,6 @@ func DBinstance() *mongo.Client {
 		log.Fatal(err)
 	}
 
-	fmt.Println("*************Connected to mongodb")
-
-	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
 	return client
 }
 
